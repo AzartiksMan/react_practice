@@ -21,7 +21,7 @@ const getProducts = productsFromServer.map(product => {
 
 const TABLE_COLUMNS_TITLE = ['ID', 'Product', 'Category', 'User'];
 
-const filterProductsByUser = (products, filterByUser, query) => {
+const filterProductsByUser = (products, filterByUser, query, filterParams) => {
   let operation = products;
 
   if (filterByUser !== null) {
@@ -36,14 +36,38 @@ const filterProductsByUser = (products, filterByUser, query) => {
     });
   }
 
+  if (filterParams.length !== 0) {
+    operation = operation.filter(({ category }) => {
+      return filterParams.includes(category.title);
+    });
+  }
+
   return operation;
 };
 
 export const App = () => {
   const [filterByUser, setFilterByUser] = useState(null);
   const [query, setQuery] = useState('');
+  const [filterParams, setFilterParams] = useState([]);
 
-  const products = filterProductsByUser(getProducts, filterByUser, query);
+  const handleSelectFilterParams = categoryTitle => {
+    setFilterParams(currentParams => [...currentParams, categoryTitle]);
+  };
+
+  const handletUnselectFilterParams = categoryTitle => {
+    setFilterParams(currentParams => {
+      return currentParams.filter(title => title !== categoryTitle);
+    });
+  };
+
+  const products = filterProductsByUser(
+    getProducts,
+    filterByUser,
+    query,
+    filterParams,
+  );
+
+  const isNotFilterParams = filterParams.length === 0;
 
   return (
     <div className="section">
@@ -113,43 +137,51 @@ export const App = () => {
               <a
                 href="#/"
                 data-cy="AllCategories"
-                className="button is-success mr-6 is-outlined"
+                className={cn('button', 'is-success', 'mr-6', {
+                  'is-outlined': !isNotFilterParams,
+                })}
+                onClick={() => setFilterParams([])}
               >
                 All
               </a>
 
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 1
-              </a>
+              {categoriesFromServer.map(({ title }) => {
+                const isFilterActive = filterParams.includes(title);
 
-              <a data-cy="Category" className="button mr-2 my-1" href="#/">
-                Category 2
-              </a>
-
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 3
-              </a>
-              <a data-cy="Category" className="button mr-2 my-1" href="#/">
-                Category 4
-              </a>
+                return (
+                  <a
+                    key={title}
+                    data-cy="Category"
+                    href="#/"
+                    className={cn('button', 'mr-2', 'my-1', {
+                      'is-info': isFilterActive,
+                    })}
+                    onClick={
+                      isFilterActive
+                        ? () => handletUnselectFilterParams(title)
+                        : () => handleSelectFilterParams(title)
+                    }
+                  >
+                    {title}
+                  </a>
+                );
+              })}
             </div>
 
             <div className="panel-block">
               <a
                 data-cy="ResetAllButton"
                 href="#/"
-                className="button is-link is-outlined is-fullwidth"
+                className={cn(
+                  'button',
+                  'is-link',
+                  { 'is-outlined': false },
+                  'is-fullwidth',
+                )}
                 onClick={() => {
                   setQuery('');
                   setFilterByUser(null);
+                  setFilterParams([]);
                 }}
               >
                 Reset all filters
