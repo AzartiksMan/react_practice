@@ -21,7 +21,7 @@ const getProducts = productsFromServer.map(product => {
 
 const TABLE_COLUMNS_TITLE = ['ID', 'Product', 'Category', 'User'];
 
-const filterProductsByUser = (
+const prepareVisibleProducts = (
   products,
   filterByUser,
   query,
@@ -96,7 +96,7 @@ export const App = () => {
     });
   };
 
-  const products = filterProductsByUser(
+  const products = prepareVisibleProducts(
     getProducts,
     filterByUser,
     query,
