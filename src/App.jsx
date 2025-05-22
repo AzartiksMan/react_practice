@@ -96,6 +96,21 @@ export const App = () => {
     });
   };
 
+  const handleSortClick = title => {
+    const isColumnSorted = columnToSort === title;
+    const isSortedUp = isColumnSorted && sortDirection === 'up';
+
+    if (!isColumnSorted) {
+      setColumnToSort(title);
+      setSortDirection('up');
+    } else if (isSortedUp) {
+      setSortDirection('down');
+    } else {
+      setSortDirection(null);
+      setColumnToSort(null);
+    }
+  };
+
   const products = prepareVisibleProducts(
     getProducts,
     filterByUser,
@@ -251,20 +266,7 @@ export const App = () => {
                         <span className="is-flex is-flex-wrap-nowrap">
                           {title}
 
-                          <a
-                            href="#/"
-                            onClick={() => {
-                              if (!isColumnSorted) {
-                                setColumnToSort(title);
-                                setSortDirection('up');
-                              } else if (isSortedUp) {
-                                setSortDirection('down');
-                              } else {
-                                setSortDirection(null);
-                                setColumnToSort(null);
-                              }
-                            }}
-                          >
+                          <a href="#/" onClick={() => handleSortClick(title)}>
                             <span className="icon">
                               <i
                                 data-cy="SortIcon"
