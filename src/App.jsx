@@ -21,8 +21,17 @@ const getProducts = productsFromServer.map(product => {
 
 const TABLE_COLUMNS_TITLE = ['ID', 'Product', 'Category', 'User'];
 
+const filterProductsByUser = (products, filterByUser) => {
+  if (filterByUser !== null) {
+    return products.filter(product => product.user.id === filterByUser);
+  }
+
+  return products;
+};
+
 export const App = () => {
-  const products = getProducts;
+  const [filterByUser, setFilterByUser] = useState(null);
+  const products = filterProductsByUser(getProducts, filterByUser);
 
   return (
     <div className="section">
@@ -37,31 +46,27 @@ export const App = () => {
               <a
                 data-cy="FilterAllUsers"
                 href="#/"
+                className={cn({ 'is-active': filterByUser === null })}
+                onClick={() => setFilterByUser(null)}
               >
                 All
               </a>
 
-              <a
-                data-cy="FilterUser"
-                href="#/"
-              >
-                User 1
-              </a>
+              {usersFromServer.map(user => {
+                const isUserSelected = filterByUser === user.id;
 
-              <a
-                data-cy="FilterUser"
-                href="#/"
-                className="is-active"
-              >
-                User 2
-              </a>
-
-              <a
-                data-cy="FilterUser"
-                href="#/"
-              >
-                User 3
-              </a>
+                return (
+                  <a
+                    key={user.id}
+                    data-cy="FilterUser"
+                    href="#/"
+                    className={cn({ 'is-active': isUserSelected })}
+                    onClick={() => setFilterByUser(user.id)}
+                  >
+                    {user.name}
+                  </a>
+                );
+              })}
             </p>
 
             <div className="panel-block">
@@ -105,11 +110,7 @@ export const App = () => {
                 Category 1
               </a>
 
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1"
-                href="#/"
-              >
+              <a data-cy="Category" className="button mr-2 my-1" href="#/">
                 Category 2
               </a>
 
@@ -120,11 +121,7 @@ export const App = () => {
               >
                 Category 3
               </a>
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1"
-                href="#/"
-              >
+              <a data-cy="Category" className="button mr-2 my-1" href="#/">
                 Category 4
               </a>
             </div>
