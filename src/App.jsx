@@ -21,17 +21,29 @@ const getProducts = productsFromServer.map(product => {
 
 const TABLE_COLUMNS_TITLE = ['ID', 'Product', 'Category', 'User'];
 
-const filterProductsByUser = (products, filterByUser) => {
+const filterProductsByUser = (products, filterByUser, query) => {
+  let operation = products;
+
   if (filterByUser !== null) {
-    return products.filter(product => product.user.id === filterByUser);
+    operation = operation.filter(product => product.user.id === filterByUser);
   }
 
-  return products;
+  if (query !== '') {
+    const normalizedQuary = query.toLowerCase().trim();
+
+    operation = operation.filter(({ name }) => {
+      return name.toLowerCase().includes(normalizedQuary);
+    });
+  }
+
+  return operation;
 };
 
 export const App = () => {
   const [filterByUser, setFilterByUser] = useState(null);
-  const products = filterProductsByUser(getProducts, filterByUser);
+  const [query, setQuery] = useState('');
+
+  const products = filterProductsByUser(getProducts, filterByUser, query);
 
   return (
     <div className="section">
@@ -76,20 +88,24 @@ export const App = () => {
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={query}
+                  onChange={event => setQuery(event.target.value.trimStart())}
                 />
 
                 <span className="icon is-left">
                   <i className="fas fa-search" aria-hidden="true" />
                 </span>
 
-                <span className="icon is-right">
-                  <button
-                    data-cy="ClearButton"
-                    type="button"
-                    className="delete"
-                  />
-                </span>
+                {query !== '' && (
+                  <span className="icon is-right">
+                    <button
+                      data-cy="ClearButton"
+                      type="button"
+                      className="delete"
+                      onClick={() => setQuery('')}
+                    />
+                  </span>
+                )}
               </p>
             </div>
 
@@ -131,6 +147,10 @@ export const App = () => {
                 data-cy="ResetAllButton"
                 href="#/"
                 className="button is-link is-outlined is-fullwidth"
+                onClick={() => {
+                  setQuery('');
+                  setFilterByUser(null);
+                }}
               >
                 Reset all filters
               </a>
@@ -139,70 +159,72 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          <p data-cy="NoMatchingMessage">
-            No products matching selected criteria
-          </p>
+          {products.length === 0 ? (
+            <p data-cy="NoMatchingMessage">
+              No products matching selected criteria
+            </p>
+          ) : (
+            <table
+              data-cy="ProductTable"
+              className="table is-striped is-narrow is-fullwidth"
+            >
+              <thead>
+                <tr>
+                  {TABLE_COLUMNS_TITLE.map(title => {
+                    return (
+                      <th key={title}>
+                        <span className="is-flex is-flex-wrap-nowrap">
+                          {title}
+                          <a href="#/">
+                            <span className="icon">
+                              <i
+                                data-cy="SortIcon"
+                                className={cn(
+                                  'fas',
+                                  { 'fa-sort': true },
+                                  { 'fa-sort-up': false },
+                                  { 'fa-sort-down': false },
+                                )}
+                              />
+                            </span>
+                          </a>
+                        </span>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
 
-          <table
-            data-cy="ProductTable"
-            className="table is-striped is-narrow is-fullwidth"
-          >
-            <thead>
-              <tr>
-                {TABLE_COLUMNS_TITLE.map(title => {
+              <tbody>
+                {products.map(product => {
+                  const isMale = product.user.sex === 'm';
+
                   return (
-                    <th key={title}>
-                      <span className="is-flex is-flex-wrap-nowrap">
-                        {title}
-                        <a href="#/">
-                          <span className="icon">
-                            <i
-                              data-cy="SortIcon"
-                              className={cn(
-                                'fas',
-                                { 'fa-sort': true },
-                                { 'fa-sort-up': false },
-                                { 'fa-sort-down': false },
-                              )}
-                            />
-                          </span>
-                        </a>
-                      </span>
-                    </th>
+                    <tr data-cy="Product">
+                      <td className="has-text-weight-bold" data-cy="ProductId">
+                        {product.id}
+                      </td>
+
+                      <td data-cy="ProductName">{product.name}</td>
+                      <td data-cy="ProductCategory">
+                        {`${product.category.icon} - ${product.category.title}`}
+                      </td>
+
+                      <td
+                        data-cy="ProductUser"
+                        className={cn(
+                          { 'has-text-link': isMale },
+                          { 'has-text-danger': !isMale },
+                        )}
+                      >
+                        {product.user.name}
+                      </td>
+                    </tr>
                   );
                 })}
-              </tr>
-            </thead>
-
-            <tbody>
-              {products.map(product => {
-                const isMale = product.user.sex === 'm';
-
-                return (
-                  <tr data-cy="Product">
-                    <td className="has-text-weight-bold" data-cy="ProductId">
-                      {product.id}
-                    </td>
-
-                    <td data-cy="ProductName">{product.name}</td>
-                    <td data-cy="ProductCategory">
-                      {`${product.category.icon} - ${product.category.title}`}
-                    </td>
-
-                    <td
-                      data-cy="ProductUser"
-                      className={cn(
-                        { 'has-text-link': isMale },
-                        { 'has-text-danger': !isMale },
-                      )}
-                    >
-                      {product.user.name}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
